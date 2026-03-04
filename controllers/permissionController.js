@@ -23,7 +23,7 @@ exports.getPermissions = async (req, res) => {
         // Apply ApiFeatures
         const features = new ApiFeatures(Permission.find(), req.query)
             .filter()
-            .search(['name']) // Search in name field
+            .search(['name'])
             .sort()
             .limitFields()
             .paginate();

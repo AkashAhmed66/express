@@ -28,7 +28,7 @@ exports.getRoles = async (req, res) => {
         // Apply ApiFeatures
         const features = new ApiFeatures(Role.find().populate('permissions'), req.query)
             .filter()
-            .search(['name']) // Search in name field
+            .search(['name']) 
             .sort()
             .limitFields()
             .paginate();

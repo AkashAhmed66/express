@@ -21,7 +21,7 @@ exports.getUsers = async (req, res) => {
         // Apply ApiFeatures
         const features = new ApiFeatures(User.find().populate('role'), req.query)
             .filter()
-            .search(['name', 'email']) // Search in name and email fields
+            .search(['name', 'email'])
             .sort()
             .limitFields()
             .paginate();

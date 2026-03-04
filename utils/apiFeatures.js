@@ -1,3 +1,12 @@
+/*
+  This is the pagination guide
+  - page = 1 ---- the page number to retrieve (default: 1)
+  - sort = field1,-field2 ---- sort by field1 ascending and field2 descending
+  - limit = 10 ---- the number of items per page (default: 10)
+  - fields = field1,field2 ---- select only specific fields
+  - search = keyword ---- search for keyword in specified fields
+  - searchFields = field1,field2 ---- specify which fields to search in (default: name,email for users)
+*/
 class ApiFeatures {
     constructor(query, queryString) {
         this.query = query;
@@ -6,28 +15,46 @@ class ApiFeatures {
 
     filter() {
         const queryObj = { ...this.queryString };
-        const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
+        const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'searchFields'];
         excludedFields.forEach(el => delete queryObj[el]);
 
         // Advanced filtering (gte, gt, lte, lt)
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-        this.query = this.query.find(JSON.parse(queryStr));
+        const parsedQuery = JSON.parse(queryStr);
+        
+        // Merge conditions with existing query using .where()
+        if (Object.keys(parsedQuery).length > 0) {
+            Object.keys(parsedQuery).forEach(key => {
+                this.query = this.query.where(key).equals(parsedQuery[key]);
+            });
+        }
+        
         return this;
     }
 
-    search(fields) {
+    search(defaultFields = []) {
         if (this.queryString.search) {
             const keyword = this.queryString.search;
+            
+            // Use searchFields from query if provided, otherwise use default fields
+            let fields = defaultFields;
+            if (this.queryString.searchFields) {
+                fields = this.queryString.searchFields.split(',').map(f => f.trim());
+            }
+            
+            // Only search if fields are specified
+            if (fields.length > 0) {
+                const searchQuery = {
+                    $or: fields.map(field => ({
+                        [field]: { $regex: keyword, $options: 'i' }
+                    }))
+                };
 
-            const searchQuery = {
-                $or: fields.map(field => ({
-                    [field]: { $regex: keyword, $options: 'i' }
-                }))
-            };
-
-            this.query = this.query.find(searchQuery);
+                // Merge search conditions with existing query using .where()
+                this.query = this.query.where(searchQuery);
+            }
         }
         return this;
     }
