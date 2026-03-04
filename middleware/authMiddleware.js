@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendErrorResponse } = require('../utils/responseHandler');
 
 exports.protect = async (req, res, next) => {
     let token;
@@ -12,7 +13,7 @@ exports.protect = async (req, res, next) => {
     }
 
     if (!token)
-        return res.status(401).json({ message: "Not authorized" });
+        return sendErrorResponse(res, 401, 'Not authorized, no token provided');
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -26,8 +27,11 @@ exports.protect = async (req, res, next) => {
             })
             .select('-password');
 
+        if (!req.user)
+            return sendErrorResponse(res, 401, 'User not found');
+
         next();
     } catch (error) {
-        res.status(401).json({ message: "Token failed" });
+        sendErrorResponse(res, 401, 'Not authorized, token failed');
     }
 };

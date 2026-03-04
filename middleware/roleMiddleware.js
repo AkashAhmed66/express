@@ -1,9 +1,17 @@
+const { sendErrorResponse } = require('../utils/responseHandler');
+
 exports.authorizeRoles = (...roles) => {
     return (req, res, next) => {
+        if (!req.user || !req.user.role) {
+            return sendErrorResponse(res, 401, 'User not authenticated');
+        }
+
         if (!roles.includes(req.user.role.name)) {
-            return res.status(403).json({
-                message: "Access denied (Role)"
-            });
+            return sendErrorResponse(
+                res, 
+                403, 
+                `Access denied. Required roles: ${roles.join(', ')}`
+            );
         }
         next();
     };
