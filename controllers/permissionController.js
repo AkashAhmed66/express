@@ -1,21 +1,52 @@
 const Permission = require('../models/Permission');
+const ApiFeatures = require('../utils/apiFeatures');
+const { sendPaginatedResponse, sendSuccessResponse, sendErrorResponse } = require('../utils/responseHandler');
 
 // Create Permission
 exports.createPermission = async (req, res) => {
-    const permission = await Permission.create({
-        name: req.body.name
-    });
-    res.status(201).json(permission);
+    try {
+        const permission = await Permission.create({
+            name: req.body.name
+        });
+        sendSuccessResponse(res, 201, permission);
+    } catch (error) {
+        sendErrorResponse(res, 400, error.message);
+    }
 };
 
-// Get All
+// Get All Permissions with Pagination, Filtering, Search & Sort
 exports.getPermissions = async (req, res) => {
-    const permissions = await Permission.find();
-    res.json(permissions);
+    try {
+        // Get total count for pagination metadata
+        const totalPermissions = await Permission.countDocuments();
+
+        // Apply ApiFeatures
+        const features = new ApiFeatures(Permission.find(), req.query)
+            .filter()
+            .search(['name']) // Search in name field
+            .sort()
+            .limitFields()
+            .paginate();
+
+        const permissions = await features.execute();
+
+        sendPaginatedResponse(res, 200, permissions, {
+            page: features.page,
+            limit: features.limit,
+            total: totalPermissions
+        });
+    } catch (error) {
+        sendErrorResponse(res, 500, error.message);
+    }
 };
 
 // Delete
 exports.deletePermission = async (req, res) => {
-    await Permission.findByIdAndDelete(req.params.id);
-    res.json({ message: "Permission deleted" });
+    try {
+        const permission = await Permission.findByIdAndDelete(req.params.id);
+        if (!permission) return sendErrorResponse(res, 404, 'Permission not found');
+        sendSuccessResponse(res, 200, null, 'Permission deleted successfully');
+    } catch (error) {
+        sendErrorResponse(res, 500, error.message);
+    }
 };
