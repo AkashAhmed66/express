@@ -19,7 +19,9 @@ exports.getUsers = async (req, res) => {
         const totalUsers = await User.countDocuments();
 
         // Apply ApiFeatures
-        const features = new ApiFeatures(User.find().populate('role'), req.query)
+        const features = new ApiFeatures(User.find()
+                                             .select('-password')
+                                             .populate({path: 'role',select: 'name'}), req.query)
             .filter()
             .search(['name', 'email'])
             .sort()
