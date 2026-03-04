@@ -1,0 +1,17 @@
+JWT Authentication ------ done
+
+Password Hashing (bcrypt) --------- done
+
+Role Based Authorization  --------- done
+
+Validation (Joi / express-validator) ------------ done
+
+Error Handling Middleware
+
+Pagination & Filtering
+
+MVC + Service Layer
+
+Dockerize Node App
+
+Deploy on VPS
